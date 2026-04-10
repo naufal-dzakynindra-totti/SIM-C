@@ -4,3 +4,4 @@ Materi Pokok:
 Koneksi MySQL ke R,
 Manajemen format data lainnya (CSV, JSON, XLSX).
 Pengenalan R-Shiny
+Terimakasih Banyak
