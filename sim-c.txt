@@ -1,0 +1,6 @@
+Kemampuan Akhir / Sub Capaian Pembelajaran Mata Kuliah (Sub-CPMK):
+Mahasiswa memahami gambaran umum mata kuliah Sistem Informasi Manajemen dan mampu melakukan koneksi data.
+Materi Pokok:
+Koneksi MySQL ke R,
+Manajemen format data lainnya (CSV, JSON, XLSX).
+Pengenalan R-Shiny
