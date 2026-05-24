@@ -1,0 +1,829 @@
+---
+title: "Analisis Hubungan Popularitas, Profitabilitas, dan Efisiensi Kategori Film pada Database Sakila"
+author: "Naufal Dzakynindra Totti W | M0725048 | C"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+fontsize: 12pt
+---
+
+```{css, echo=FALSE}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Playfair+Display:wght@700&display=swap');
+
+/* Background halaman lebih hidup */
+body {
+  background:
+    radial-gradient(circle at top left, #dbeafe 0%, transparent 28%),
+    radial-gradient(circle at bottom right, #bfdbfe 0%, transparent 25%),
+    linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+}
+
+/* Container utama title */
+.title {
+  font-family: 'Playfair Display', serif !important;
+  font-size: 2.8rem !important;
+  line-height: 1.25 !important;
+  color: #0f172a !important;
+  text-align: left;
+  padding: 38px 42px 20px 42px !important;
+  margin-top: 20px !important;
+  margin-bottom: 10px !important;
+  border-radius: 30px;
+  position: relative;
+  background: linear-gradient(
+  135deg,
+  rgba(96, 165, 250, 0.55)),
+  rgba(37, 99, 235, 0.78),
+  rgba(96, 165, 250, 0.55)
+);
+border: 1px solid rgba(147, 197, 253, 0.35);
+box-shadow:
+  0 10px 35px rgba(37, 99, 235, 0.30),
+  inset 0 1px 1px rgba(255,255,255,0.25);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255,255,255,0.45);
+  box-shadow:
+    0 10px 40px rgba(37,99,235,0.12),
+    0 4px 18px rgba(15,23,42,0.08),
+    inset 0 1px 1px rgba(255,255,255,0.7);
+  overflow: hidden;
+}
+
+/* Glow effect */
+.title::before {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  background: rgba(255,255,255,0.35);
+  border-radius: 50%;
+  top: -120px;
+  right: -80px;
+  filter: blur(12px);
+}
+
+/* Garis aksen premium */
+.title::after {
+  content: "";
+  position: absolute;
+  left: 42px;
+  bottom: 0;
+  width: 120px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #2563eb,
+    #60a5fa,
+    #f59e0b
+  );
+}
+
+/* AUTHOR */
+.author {
+  display: inline-block;
+  margin-top: 18px !important;
+  margin-right: 12px;
+  padding: 14px 22px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.52);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow:
+    0 4px 16px rgba(15,23,42,0.06),
+    inset 0 1px 1px rgba(255,255,255,0.8);
+  color: #1e293b !important;
+  font-size: 1rem !important;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* DATE */
+.date {
+  display: inline-block;
+  margin-top: 18px !important;
+  padding: 14px 22px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.52);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow:
+    0 4px 16px rgba(15,23,42,0.06),
+    inset 0 1px 1px rgba(255,255,255,0.8);
+  color: #334155 !important;
+  font-size: 0.96rem !important;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem !important;
+    padding: 30px 24px 18px 24px !important;
+  }
+  .author,
+  .date {
+    display: block;
+    width: fit-content;
+  }
+}
+
+
+:root {
+  --blue-900: #0d1b3e;
+  --blue-700: #1a3a6b;
+  --blue-500: #2563eb;
+  --blue-300: #93c5fd;
+  --blue-100: #dbeafe;
+  --accent:   #f59e0b;
+  --surface:  #ffffff;
+  --bg:       #f0f4fb;
+  --text:     #1e293b;
+  --muted:    #64748b;
+}
+
+/* ── Base ── */
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.85;
+  font-size: 15.5px;
+  padding-bottom: 60px;
+}
+
+/* ── Headings ── */
+h1 {
+  font-family: 'Playfair Display', serif;
+  color: var(--blue-900);
+  font-size: 4rem;
+  border-left: 6px solid var(--accent);
+  padding-left: 16px;
+  margin-top: 48px;
+  margin-bottom: 12px;
+}
+h2 {
+  color: var(--blue-700);
+  font-size: 3rem;
+  font-weight: 700;
+  border-bottom: 2px solid var(--blue-100);
+  padding-bottom: 6px;
+  margin-top: 36px;
+}
+h3 {
+  color: var(--blue-500);
+  font-size: 2rem;
+  font-weight: 600;
+  margin-top: 24px;
+}
+
+p { text-align: justify; }
+
+/* ── Table ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(13,27,62,.10);
+}
+thead tr { background: var(--blue-700); }
+th {
+  color: #ffffff;
+  padding: 11px 14px;
+  text-align: center;
+  font-size: 0.88rem;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.93rem;
+}
+tr:nth-child(even) td { background: #f8faff; }
+tr:hover td { background: var(--blue-100); transition: background .15s; }
+
+/* ── Code ── */
+code {
+  background: #e8f0fe;
+  color: var(--blue-700);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.88em;
+}
+pre {
+  border-left: 5px solid var(--blue-500);
+  background: #f8faff;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+}
+
+/* ── Callout / Blockquote ── */
+blockquote {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 5px solid var(--blue-500);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 20px;
+  color: var(--blue-700);
+  font-size: 1.3rem;
+  font-style: normal;
+  font-weight: 600;
+  margin: 20px 0;
+}
+
+/* ── TOC ── */
+#TOC {
+  background: var(--surface);
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-size: 0.9rem;
+}
+#TOC a { color: var(--blue-700); }
+#TOC a:hover { color: var(--blue-500); text-decoration: underline; }
+
+/* ── Plots ── */
+img {
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 3px 16px rgba(13,27,62,.12);
+}
+.caption {
+  text-align: center;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* ── Insight box ── */
+.insight-box {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 5px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 20px;
+  color: #78350f;
+  margin: 16px 0;
+}
+```
+
+# Pendahuluan
+
+Perkembangan teknologi informasi telah mendorong pemanfaatan data dalam berbagai bidang bisnis, termasuk industri hiburan dan penyewaan film. Data transaksi yang tersimpan dalam database dapat dimanfaatkan untuk memahami perilaku pelanggan, mengevaluasi performa produk, serta mendukung pengambilan keputusan bisnis yang lebih efektif.
+
+**Database Sakila** merupakan database simulasi yang merepresentasikan sistem rental film. Database ini menyimpan berbagai informasi seperti data film, kategori film, transaksi rental, pembayaran pelanggan, hingga inventaris film. Dengan struktur relasional yang lengkap, database Sakila sangat cocok digunakan untuk melakukan analisis data dan visualisasi bisnis.
+
+Dalam bisnis rental film, **popularitas** kategori film menjadi salah satu indikator penting untuk mengetahui preferensi pelanggan. Namun, tingginya tingkat penyewaan tidak selalu menunjukkan bahwa kategori tersebut memberikan keuntungan terbesar. Selain itu, **efisiensi pendapatan** dari setiap transaksi juga perlu diperhatikan untuk memahami performa ekonomi masing-masing kategori.
+
+Oleh karena itu, analisis terhadap hubungan antara **popularitas**, **profitabilitas**, dan **efisiensi** kategori film menjadi penting. Analisis ini diharapkan mampu memberikan gambaran mengenai:
+
+- Kategori film yang paling diminati pelanggan,
+- Kategori yang menghasilkan pendapatan terbesar,
+- Kategori yang memiliki efisiensi bisnis terbaik, dan
+- Kekuatan hubungan statistik antar ketiga dimensi tersebut.
+
+Analisis dilakukan menggunakan bahasa pemrograman **R** dengan integrasi database MySQL melalui package `DBI` dan `ODBC`. Proses analisis meliputi pengambilan data menggunakan query SQL, visualisasi data menggunakan `ggplot2`, serta analisis statistik berupa korelasi dan regresi linear.
+
+---
+
+# Persiapan Data
+
+Tahap persiapan data dilakukan untuk memastikan data yang digunakan telah berhasil diakses, diproses, dan siap digunakan untuk visualisasi maupun analisis statistik.
+
+## Persiapan Library
+
+Library berikut digunakan untuk mendukung proses koneksi database, manipulasi data, visualisasi, dan analisis statistik.
+
+```{r setup, message=FALSE, warning=FALSE, echo=TRUE}
+library(DBI)
+library(odbc)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(scales)     # Format angka pada sumbu grafik
+library(tidyr)      # Transformasi data untuk visualisasi multi-dimensi
+library(ggrepel)    # Label yang tidak tumpang tindih pada scatter plot
+```
+
+## Koneksi Database MySQL
+
+Koneksi ke database dilakukan menggunakan package `DBI` dan `ODBC` untuk menghubungkan RStudio dengan database MySQL Sakila yang berjalan pada localhost.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+con <- dbConnect(
+  odbc(),
+  Driver   = "MySQL ODBC 8.0 ANSI Driver",
+  Server   = "127.0.0.1",
+  Database = "sakila",
+  UID      = "root",
+  PWD      = "Ochi1808",
+  Port     = 3306
+)
+```
+
+## Pengambilan Data Utama
+
+Data utama diperoleh menggunakan query SQL yang menggabungkan tabel `category`, `film_category`, `film`, `inventory`, `rental`, dan `payment`.
+
+```{r}
+query <- "
+SELECT 
+    c.name AS category,
+    COUNT(r.rental_id)                              AS total_rentals,
+    ROUND(SUM(p.amount), 2)                         AS total_revenue,
+    ROUND(SUM(p.amount) / COUNT(r.rental_id), 2)   AS avg_revenue_per_rental
+FROM category c
+JOIN film_category fc ON c.category_id = fc.category_id
+JOIN film f           ON fc.film_id    = f.film_id
+JOIN inventory i      ON f.film_id     = i.film_id
+JOIN rental r         ON i.inventory_id = r.inventory_id
+JOIN payment p        ON r.rental_id   = p.rental_id
+GROUP BY c.name
+ORDER BY total_rentals DESC;
+"
+
+sakila_data <- dbGetQuery(con, query)
+
+sakila_data <- sakila_data %>%
+  mutate(
+    total_rentals          = as.numeric(total_rentals),
+    total_revenue          = as.numeric(total_revenue),
+    avg_revenue_per_rental = as.numeric(avg_revenue_per_rental)
+  )
+```
+
+## Preview Dataset
+
+Preview awal menampilkan beberapa baris teratas dataset untuk memastikan struktur dan isi data sudah sesuai harapan.
+
+```{r}
+kable(head(sakila_data, 6), caption = "Preview 6 Baris Pertama Dataset")
+```
+
+## Struktur Data
+
+Pemeriksaan struktur data dilakukan untuk memastikan tipe data tiap kolom sudah tepat (numeric untuk metrik dan character/factor untuk kategori) dan untuk melihat jumlah observasi.
+
+```{r}
+str(sakila_data)
+```
+
+## Ringkasan Statistik
+
+Ringkasan statistik deskriptif membantu memahami sebaran awal data: nilai minimum, maksimum, median, kuartil, dan rerata untuk masing-masing metrik.
+
+```{r}
+summary(sakila_data)
+```
+
+## Keseluruhan Dataset
+
+Bagian berikut menyajikan keseluruhan tabel agregasi per kategori untuk memberikan gambaran lengkap.
+
+```{r}
+kable(sakila_data, caption = "Dataset Lengkap: Kategori Film Sakila")
+```
+
+---
+
+# Analisis Visualisasi Data
+
+Tahap analisis visualisasi dilakukan untuk memahami performa masing-masing kategori film berdasarkan tiga dimensi utama: **popularitas**, **profitabilitas**, dan **efisiensi pendapatan**.
+
+Paleta warna, tipografi, dan tata letak grafik dirancang agar konsisten dan mudah dibaca. Setiap grafik dilengkapi dengan label nilai untuk memudahkan perbandingan antar kategori.
+
+```{r theme-setup, echo=FALSE}
+# Palet warna kustom untuk 16 kategori
+pal_main <- c(
+  "#1a3a6b","#2563eb","#3b82f6","#60a5fa","#93c5fd",
+  "#bfdbfe","#dbeafe","#f59e0b","#fbbf24","#fcd34d",
+  "#4ade80","#22c55e","#16a34a","#ef4444","#dc2626","#b91c1c"
+)
+
+# Tema kustom yang digunakan di semua grafik
+theme_sakila <- function() {
+  theme_minimal(base_family = "sans") +
+  theme(
+    plot.title       = element_text(face = "bold", size = 14, color = "#0d1b3e",
+                                    margin = margin(b = 4)),
+    plot.subtitle    = element_text(size = 11, color = "#475569",
+                                    margin = margin(b = 14)),
+    plot.caption     = element_text(size = 9, color = "#94a3b8", hjust = 0),
+    plot.background  = element_rect(fill = "#f8faff", color = NA),
+    panel.background = element_rect(fill = "#f8faff", color = NA),
+    panel.grid.major = element_line(color = "#e2e8f0", linewidth = 0.5),
+    panel.grid.minor = element_blank(),
+    axis.title       = element_text(size = 10, color = "#475569", face = "bold"),
+    axis.text        = element_text(size = 9,  color = "#475569"),
+    axis.text.x      = element_text(angle = 40, hjust = 1),
+    legend.position  = "none"
+  )
+}
+```
+
+## Analisis Popularitas
+
+Popularitas diukur berdasarkan total transaksi rental pada masing-masing kategori film. Kategori dengan jumlah rental tinggi menunjukkan tingginya minat pelanggan.
+
+```{r tabel-popularitas}
+popularitas <- sakila_data %>% arrange(desc(total_rentals))
+kable(head(popularitas, 5), caption = "Top 5 Kategori Paling Populer")
+```
+
+Lima besar kategori paling populer menunjukkan konsentrasi minat yang kuat di beberapa genre utama. Dominasi kategori seperti Sports, Animation, dan Action menegaskan preferensi pelanggan terhadap konten yang bersifat dinamis dan menarik secara umum.
+
+Sementara itu, kategori di luar lima besar memiliki ceruk yang lebih sempit sehingga berpotensi membutuhkan strategi promosi yang lebih spesifik untuk meningkatkan eksposur.
+
+## Analisis Profitabilitas
+
+Profitabilitas diukur berdasarkan total revenue yang dihasilkan dari transaksi rental pada masing-masing kategori.
+
+```{r tabel-profitabilitas}
+profitabilitas <- sakila_data %>% arrange(desc(total_revenue))
+kable(head(profitabilitas, 5), caption = "Top 5 Kategori Paling Menguntungkan")
+```
+
+Peringkat teratas pada revenue memperlihatkan kategori yang tidak hanya sering disewa, tetapi juga menghasilkan akumulasi nilai transaksi yang besar. 
+
+Jika terdapat kategori yang masuk lima besar revenue namun tidak di lima besar popularitas, hal tersebut mengindikasikan nilai transaksi rata-rata yang relatif tinggi atau distribusi pembayaran yang lebih menguntungkan.
+
+## Analisis Efisiensi
+
+Efisiensi diukur menggunakan *average revenue per rental*, yaitu rata-rata pendapatan yang diperoleh dari setiap satu transaksi rental.
+
+```{r tabel-efisiensi}
+efisiensi <- sakila_data %>% arrange(desc(avg_revenue_per_rental))
+kable(head(efisiensi, 5), caption = "Top 5 Kategori Paling Efisien")
+```
+
+Masuknya kategori tertentu di lima besar efisiensi meski tidak populer menandakan potensi peningkatan pendapatan melalui optimalisasi harga, bundling, atau promosi terarah.
+
+Kategori ini dapat menjadi sasaran eksperimen pemasaran untuk mengonversi efisiensi tinggi menjadi peningkatan volume.
+
+---
+
+## Visualisasi Popularitas
+
+Visualisasi berikut menampilkan total rental tiap kategori film, diurutkan dari yang tertinggi hingga terendah. Warna batang merepresentasikan gradasi popularitas, dan nilai total rental ditampilkan langsung di atas setiap batang.
+
+```{r viz-popularitas, fig.width=11, fig.height=6, message=FALSE, warning=FALSE}
+# Beri warna berdasarkan urutan rank agar mudah dibedakan
+pop_plot <- sakila_data %>%
+  mutate(
+    category = reorder(category, total_rentals),
+    rank_col  = rank(total_rentals)
+  )
+
+ggplot(pop_plot, aes(x = category, y = total_rentals, fill = rank_col)) +
+  geom_col(width = 0.72, show.legend = FALSE) +
+  geom_text(aes(label = comma(total_rentals)),
+            hjust = -0.12, size = 3.2, color = "#1e293b", fontface = "bold") +
+  scale_fill_gradient(low = "#93c5fd", high = "#1a3a6b") +
+  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, .18))) +
+  coord_flip() +
+  labs(
+    title    = "Popularitas Kategori Film — Total Rental",
+    subtitle = "Jumlah total transaksi penyewaan per kategori film (diurutkan dari tertinggi)",
+    x = NULL,
+    y = "Total Rentals",
+    caption  = "Sumber: Database Sakila"
+  ) +
+  theme_sakila() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+> **Insight:** Kategori **Sports** mendominasi dengan jumlah rental tertinggi, diikuti **Animation** dan **Action**. Kategori **Travel** dan **Music** berada di posisi terbawah, menandakan minat pelanggan yang relatif lebih rendah terhadap kedua kategori tersebut.
+
+---
+
+## Visualisasi Profitabilitas
+
+Grafik berikut membandingkan total revenue tiap kategori. Warna emas (*accent*) digunakan untuk menyoroti kategori dengan profitabilitas tertinggi agar mudah diidentifikasi.
+
+```{r viz-profitabilitas, fig.width=11, fig.height=6, message=FALSE, warning=FALSE}
+rev_max  <- max(sakila_data$total_revenue)
+rev_plot <- sakila_data %>%
+  mutate(
+    category  = reorder(category, total_revenue),
+    highlight = total_revenue >= (rev_max * 0.92)
+  )
+
+ggplot(rev_plot, aes(x = category, y = total_revenue, fill = highlight)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = paste0("$", comma(total_revenue))),
+            hjust = -0.10, size = 3.2, color = "#1e293b", fontface = "bold") +
+  scale_fill_manual(values = c("FALSE" = "#3b82f6", "TRUE" = "#f59e0b"),
+                    guide = "none") +
+  scale_y_continuous(labels = dollar, expand = expansion(mult = c(0, .20))) +
+  coord_flip() +
+  labs(
+    title    = "Profitabilitas Kategori Film — Total Revenue",
+    subtitle = "Total pendapatan dari seluruh transaksi rental per kategori (warna emas = tertinggi)",
+    x = NULL,
+    y = "Total Revenue (USD)",
+    caption  = "Sumber: Database Sakila"
+  ) +
+  theme_sakila() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+> **Insight:** Kategori dengan revenue tertinggi tidak selalu sama persis dengan kategori paling populer secara volume rental. Hal ini mengindikasikan bahwa **nilai per transaksi** turut memengaruhi kontribusi pendapatan suatu kategori.
+
+---
+
+## Visualisasi Efisiensi
+
+Grafik lollipop berikut dipilih untuk memperjelas perbedaan nilai *average revenue per rental* antar kategori. Titik besar di ujung memudahkan pembacaan nilai secara presisi.
+
+```{r viz-efisiensi, fig.width=11, fig.height=6, message=FALSE, warning=FALSE}
+eff_plot <- sakila_data %>%
+  mutate(
+    category = reorder(category, avg_revenue_per_rental),
+    label    = paste0("$", sprintf("%.2f", avg_revenue_per_rental))
+  )
+
+ggplot(eff_plot, aes(x = category, y = avg_revenue_per_rental)) +
+  geom_segment(aes(xend = category, y = 0, yend = avg_revenue_per_rental),
+               color = "#93c5fd", linewidth = 1.2) +
+  geom_point(aes(color = avg_revenue_per_rental), size = 4.5) +
+  geom_text(aes(label = label),
+            hjust = -0.25, size = 3.1, color = "#1e293b", fontface = "bold") +
+  scale_color_gradient(low = "#60a5fa", high = "#1a3a6b", guide = "none") +
+  scale_y_continuous(labels = dollar, expand = expansion(mult = c(0, .22))) +
+  coord_flip() +
+  labs(
+    title    = "Efisiensi Kategori Film — Average Revenue per Rental",
+    subtitle = "Rata-rata pendapatan yang dihasilkan dari setiap satu transaksi rental",
+    x = NULL,
+    y = "Avg Revenue per Rental (USD)",
+    caption  = "Sumber: Database Sakila"
+  ) +
+  theme_sakila() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+> **Insight:** Beberapa kategori mampu menghasilkan rata-rata pendapatan per transaksi yang lebih tinggi meskipun volume rentalnya tidak terdepan. Ini menunjukkan bahwa **kualitas pendapatan per transaksi** adalah dimensi evaluasi yang berbeda dari sekadar volume.
+
+---
+
+## Visualisasi Perbandingan
+
+Tabel perbandingan ini mengompilasi tiga peringkat sekaligus untuk membantu melihat konsistensi performa 
+
+Dengan menyandingkan rank popularitas, profitabilitas, dan efisiensi, kita dapat menilai trade-off dan area optimalisasi yang potensial..
+
+```{r tabel-perbandingan}
+comparison_table <- sakila_data %>%
+  mutate(
+    popularity_rank    = rank(-total_rentals),
+    profitability_rank = rank(-total_revenue),
+    efficiency_rank    = rank(-avg_revenue_per_rental)
+  ) %>%
+  arrange(popularity_rank) %>%
+  select(category, total_rentals, total_revenue, avg_revenue_per_rental,
+         popularity_rank, profitability_rank, efficiency_rank)
+
+kable(comparison_table,
+      col.names = c("Kategori", "Total Rentals", "Total Revenue",
+                    "Avg Rev/Rental", "Rank Popularitas",
+                    "Rank Profitabilitas", "Rank Efisiensi"),
+      caption = "Perbandingan Ranking Tiga Dimensi per Kategori Film")
+```
+
+---
+
+## Visualisasi Multi-Dimensi
+
+Bubble chart berikut menyajikan ketiga dimensi dalam satu grafik: **sumbu X** = total rentals (popularitas), **sumbu Y** = total revenue (profitabilitas), **ukuran gelembung** = avg revenue per rental (efisiensi).
+
+```{r viz-bubble, fig.width=12, fig.height=7, message=FALSE, warning=FALSE}
+ggplot(sakila_data,
+       aes(x = total_rentals, y = total_revenue,
+           size = avg_revenue_per_rental, color = category)) +
+  geom_point(alpha = 0.82) +
+  geom_text_repel(aes(label = category),
+                  size = 3.2, fontface = "bold",
+                  color = "#1e293b",
+                  box.padding = 0.45, point.padding = 0.3,
+                  max.overlaps = 20) +
+  scale_size_continuous(range = c(4, 16), name = "Avg Rev/Rental (USD)") +
+  scale_color_manual(values = pal_main, guide = "none") +
+  scale_x_continuous(labels = comma) +
+  scale_y_continuous(labels = dollar) +
+  labs(
+    title    = "Peta Performa Kategori Film: Popularitas vs Profitabilitas vs Efisiensi",
+    subtitle = "Sumbu X = Total Rentals | Sumbu Y = Total Revenue | Ukuran Gelembung = Avg Revenue/Rental",
+    x = "Total Rentals (Popularitas)",
+    y = "Total Revenue (Profitabilitas)",
+    caption = "Sumber: Database Sakila"
+  ) +
+  theme_sakila() +
+  theme(
+    axis.text.x   = element_text(angle = 0, hjust = 0.5),
+    legend.position = "right",
+    legend.title    = element_text(size = 9, face = "bold"),
+    legend.text     = element_text(size = 8)
+  )
+```
+
+> **Insight:** Kategori yang berada di **kuadran kanan atas** (popularitas tinggi, revenue tinggi) merupakan kategori terbaik secara bisnis. Kategori dengan gelembung besar namun berada di kiri menandakan efisiensi tinggi walau volume rendah — potensi yang bisa dioptimalkan dengan strategi promosi.
+
+---
+
+## Visualisasi Ranking
+
+Heatmap berikut memvisualisasikan ranking tiap kategori pada ketiga dimensi secara bersamaan. Warna biru tua menunjukkan ranking terbaik (1), warna biru muda menunjukkan ranking terendah.
+
+```{r viz-heatmap, fig.width=10, fig.height=7, message=FALSE, warning=FALSE}
+heat_data <- comparison_table %>%
+  select(category, popularity_rank, profitability_rank, efficiency_rank) %>%
+  pivot_longer(-category, names_to = "dimension", values_to = "rank_val") %>%
+  mutate(dimension = recode(dimension,
+    popularity_rank    = "Popularitas",
+    profitability_rank = "Profitabilitas",
+    efficiency_rank    = "Efisiensi"
+  ))
+
+n_cat <- n_distinct(heat_data$category)
+
+ggplot(heat_data,
+       aes(x = dimension,
+           y = reorder(category, -rank_val),
+           fill = rank_val)) +
+  geom_tile(color = "white", linewidth = 0.8) +
+  geom_text(aes(label = round(rank_val, 0)),
+            size = 3.5, fontface = "bold", color = "white") +
+  scale_fill_gradient(low = "#1a3a6b", high = "#bfdbfe",
+                      name = "Ranking\n(1 = terbaik)") +
+  labs(
+    title    = "Heatmap Ranking Kategori Film",
+    subtitle = "Warna biru tua = ranking terbaik | Angka = posisi ranking",
+    x = "Dimensi Evaluasi",
+    y = NULL,
+    caption = "Sumber: Database Sakila"
+  ) +
+  theme_sakila() +
+  theme(
+    axis.text.x   = element_text(angle = 0, hjust = 0.5, face = "bold"),
+    legend.position = "right"
+  )
+```
+
+> **Insight:** Heatmap memudahkan identifikasi kategori yang konsisten unggul di semua dimensi vs. kategori yang hanya kuat di satu dimensi tertentu. Kategori dengan dominasi warna biru tua di semua kolom merupakan kandidat prioritas investasi bisnis.
+
+---
+
+# Analisis Statistik
+
+Analisis statistik dilakukan untuk memahami hubungan kuantitatif antara popularitas, profitabilitas, dan efisiensi kategori film menggunakan pendekatan **korelasi Pearson** dan **regresi linear sederhana**.
+
+## Analisis Korelasi
+
+### Korelasi Popularitas–Profitabilitas
+
+Korelasi Pearson mengukur kekuatan hubungan linear antara total rental dan total revenue.
+
+$$
+r = \frac{
+\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})
+}{
+\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2 \cdot \sum_{i=1}^{n}(y_i - \bar{y})^2}
+}
+$$
+
+```{r korelasi-pop-prof}
+cor_pop_prof <- cor(sakila_data$total_rentals, sakila_data$total_revenue,
+                    method = "pearson")
+cat("Korelasi Pearson (Rentals vs Revenue):", round(cor_pop_prof, 4))
+```
+
+### Korelasi Popularitas
+
+```{r korelasi-pop-eff}
+cor_pop_eff <- cor(sakila_data$total_rentals, sakila_data$avg_revenue_per_rental,
+                   method = "pearson")
+cat("Korelasi Pearson (Rentals vs Avg Rev/Rental):", round(cor_pop_eff, 4))
+```
+
+### Korelasi Profitabilitas
+
+```{r korelasi-prof-eff}
+cor_prof_eff <- cor(sakila_data$total_revenue, sakila_data$avg_revenue_per_rental,
+                    method = "pearson")
+cat("Korelasi Pearson (Revenue vs Avg Rev/Rental):", round(cor_prof_eff, 4))
+```
+
+> **Interpretasi:** Koefisien korelasi mendekati **+1** mengindikasikan hubungan positif kuat, mendekati **0** mengindikasikan hubungan lemah. Hasil di atas menunjukkan bahwa popularitas (volume rental) berkorelasi kuat dengan profitabilitas total, namun korelasinya dengan efisiensi per transaksi jauh lebih lemah — artinya kategori yang sering disewa tidak otomatis paling efisien secara per-transaksi.
+
+---
+
+## Analisis Regresi Linear
+
+### Popularitas → Profitabilitas
+
+Model regresi linear sederhana digunakan untuk memodelkan hubungan antara total rental (prediktor) dan total revenue (respons).
+
+$$
+\hat{Y} = \beta_0 + \beta_1 X
+$$
+
+di mana:
+- $\hat{Y}$ = prediksi total revenue,
+- $X$ = total rentals,
+- $\beta_0$ = intercept,
+- $\beta_1$ = slope (perubahan revenue per tambahan satu rental).
+
+```{r regresi}
+model <- lm(total_revenue ~ total_rentals, data = sakila_data)
+summary(model)
+```
+
+Intercept (β0) merepresentasikan pendapatan dasar saat rental mendekati nol (interpretasi terbatas, tetapi berguna secara matematis).
+
+Slope (β1) menunjukkan estimasi kenaikan pendapatan untuk tiap tambahan satu rental—semakin besar nilainya, semakin sensitif revenue terhadap volume.
+
+R^2 mengindikasikan proporsi variasi revenue yang dapat dijelaskan oleh rentals. Nilai R² yang tinggi berarti popularitas menjelaskan sebagian besar variasi profitabilitas.
+
+P-value yang kecil pada β1 mendukung signifikansi statistik hubungan linear tersebut.
+
+### Visualisasi Confidence Interval
+
+```{r viz-regresi, fig.width=10, fig.height=6, message=FALSE, warning=FALSE}
+ggplot(sakila_data, aes(x = total_rentals, y = total_revenue)) +
+  geom_smooth(method = "lm", se = TRUE,
+              color = "#2563eb", fill = "#bfdbfe", linewidth = 1.4, alpha = 0.35) +
+  geom_point(aes(color = avg_revenue_per_rental), size = 4.5, alpha = 0.9) +
+  geom_text_repel(aes(label = category),
+                  size = 3.1, fontface = "bold", color = "#1e293b",
+                  box.padding = 0.4, max.overlaps = 16) +
+  scale_color_gradient(low = "#93c5fd", high = "#1a3a6b",
+                       name = "Avg Rev/Rental") +
+  scale_x_continuous(labels = comma) +
+  scale_y_continuous(labels = dollar) +
+  annotate("text",
+           x = min(sakila_data$total_rentals) * 1.02,
+           y = max(sakila_data$total_revenue) * 0.97,
+           label = paste0("r = ", round(cor_pop_prof, 3),
+                          "\nR² = ", round(summary(model)$r.squared, 3)),
+           hjust = 0, vjust = 1,
+           size = 3.8, color = "#1a3a6b", fontface = "bold",
+           family = "sans") +
+  labs(
+    title    = "Regresi Linear: Popularitas vs Profitabilitas Kategori Film",
+    subtitle = "Area biru = confidence interval 95% | Warna titik = efisiensi (avg rev/rental)",
+    x = "Total Rentals (Popularitas)",
+    y = "Total Revenue (Profitabilitas)",
+    caption = "Sumber: Database Sakila"
+  ) +
+  theme_sakila() +
+  theme(
+    axis.text.x     = element_text(angle = 0, hjust = 0.5),
+    legend.position = "right",
+    legend.title    = element_text(size = 9, face = "bold"),
+    legend.text     = element_text(size = 8)
+  )
+```
+
+> **Interpretasi:**
+> - **Koefisien R²** menunjukkan seberapa besar proporsi variansi total revenue yang dapat dijelaskan oleh total rentals.
+> - **Slope $\beta_1$** mengindikasikan besaran kenaikan revenue untuk setiap tambahan satu transaksi rental.
+> - **P-value** pada model memberikan informasi signifikansi statistik hubungan tersebut.
+> - Warna titik yang lebih gelap menunjukkan kategori dengan efisiensi per transaksi lebih tinggi, terlepas dari posisi mereka pada garis regresi.
+
+---
+
+# Kesimpulan
+
+Analisis terhadap database Sakila pada tiga dimensi utama menghasilkan beberapa temuan penting:
+
+1. **Popularitas** — Kategori **Sports**, **Animation**, dan **Action** mendominasi jumlah rental, menunjukkan demand pasar yang tinggi pada konten bergenre aktif dan dinamis.
+
+2. **Profitabilitas** — Kategori dengan revenue tertinggi tidak selalu identik dengan kategori paling populer, mengindikasikan perbedaan pola konsumsi dan nilai transaksi antar kategori.
+
+3. **Efisiensi** — Kategori dengan *average revenue per rental* tertinggi menunjukkan kemampuan menghasilkan nilai lebih tinggi per transaksi, meskipun volume rentalnya tidak selalu terdepan.
+
+4. **Korelasi & Regresi** — Terdapat hubungan positif yang signifikan antara popularitas dan profitabilitas, namun hubungan antara popularitas dan efisiensi relatif lebih lemah. Hal ini menegaskan bahwa **volume transaksi bukan satu-satunya penentu performa bisnis**.
+
+> **Rekomendasi:** Strategi optimal adalah mengkombinasikan kategori bervolume tinggi (popularitas) dengan kategori bervalue tinggi (efisiensi) — bukan hanya berfokus pada satu dimensi. Kategori yang unggul di keduanya layak mendapat alokasi inventaris dan promosi lebih besar.
+
+---
+
+```{r disconnect, echo=FALSE}
+dbDisconnect(con)
+```
